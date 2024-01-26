@@ -11,6 +11,7 @@ const client = new Client();
 client.once('ready', async () => {
   console.log('Ready!');
   // await setupDb();
+  checkReminders()
   setInterval(checkReminders, 60000); // check reminders every minute
 });
 
