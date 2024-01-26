@@ -34,45 +34,58 @@ async function checkReminders() {
 }
 
 client.on('messageCreate', async message => {
-  if (!message.content.startsWith('!remindme') || message.author.bot) return;
-
-  const args = message.content.slice('!remindme'.length).trim().split(/ +/);
-  if (args[0] && (!args[0].match(/^(\d+)(d|h|m)$/) && args[0] !== "jutro" && args.length === 1)) {
-    message.reply({
-      content: "Użycie: `!remindme <czas> <wiadomość>`\n" +
-        "Format czasu: `[liczba][d/h/m]` lub `jutro`.\n" +
-        "Przykład: `!remindme jutro Shippo nie ma racji!`\n" +
-        "`wiadomość` jest opcjonalna, `czas` również (domyślnie `1d`)",
-      allowedMentions: { repliedUser: false }
-    });
+  if (message.author.bot) {
     return;
   }
 
-  let durationArg = '1d'; // Default duration
-  let remindMessage = null; // Default reminder message
+  if (message.content.toLowerCase().startsWith('!remindme')) {
+    const args = message.content.slice('!remindme'.length).trim().split(/ +/);
+    if (args[0] && (!args[0].match(/^(\d+)(d|h|m)$/) && args[0] !== "jutro" && args.length === 1)) {
+      message.reply({
+        content: "Użycie: `!remindme <czas> <wiadomość>`\n" +
+          "Format czasu: `[liczba][d/h/m]` lub `jutro`.\n" +
+          "Przykład: `!remindme jutro Shippo nie ma racji!`\n" +
+          "`wiadomość` jest opcjonalna, `czas` również (domyślnie `1d`)",
+        allowedMentions: { repliedUser: false }
+      });
+      return;
+    }
 
-  if (args[0].match(/^(\d+)(d|h|m)$/) || args[0] === "jutro") {
-    durationArg = args.shift(); // Use the supplied duration and remove it from args
+    let durationArg = '1d'; // Default duration
+    let remindMessage = null; // Default reminder message
+
+    if (args[0].match(/^(\d+)(d|h|m)$/) || args[0] === "jutro") {
+      durationArg = args.shift(); // Use the supplied duration and remove it from args
+    }
+
+    if (args.length > 0) {
+      remindMessage = args.join(' ');
+    }
+
+    const remindDate = generateReminderDate(durationArg);
+
+    await addReminder(message.author.id, remindDate.toISOString(), remindMessage);
+
+    if (remindMessage) {
+      message.reply({
+        content: `Jasne! Przypomnę ci o "${remindMessage}" za ${durationArg}.`,
+        allowedMentions: { repliedUser: false }
+      });
+    } else {
+      message.reply({
+        content: `Jasne! Przypomnę ci o tym za ${durationArg}.`,
+        allowedMentions: { repliedUser: false }
+      });
+    }
+    return;
   }
 
-  if (args.length > 0) {
-    remindMessage = args.join(' ');
-  }
-
-  const remindDate = generateReminderDate(durationArg);
-
-  await addReminder(message.author.id, remindDate.toISOString(), remindMessage);
-
-  if (remindMessage) {
+  if (message.content.toLowerCase().includes('zbawić')) {
     message.reply({
-      content: `Jasne! Przypomnę ci o "${remindMessage}" za ${durationArg}.`,
+      content: `Zniszczyć fandom`,
       allowedMentions: { repliedUser: false }
     });
-  } else {
-    message.reply({
-      content: `Jasne! Przypomnę ci o tym za ${durationArg}.`,
-      allowedMentions: { repliedUser: false }
-    });
+    return;
   }
 });
 
